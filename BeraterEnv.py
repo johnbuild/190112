@@ -5,43 +5,7 @@ import gym
 from gym.utils import seeding
 from gym import spaces
 
-def state_name_to_int(state):
-    state_name_map = {
-        'S': 0,
-        'A': 1,
-        'B': 2,
-        'C': 3,
-        'D': 4,
-        'E': 5,
-        'F': 6,
-        'G': 7,
-        'H': 8,
-        'K': 9,
-        'L': 10,
-        'M': 11,
-        'N': 12,
-        'O': 13
-    }
-    return state_name_map[state]
-
-def int_to_state_name(state_as_int):
-    state_map = {
-        0: 'S',
-        1: 'A',
-        2: 'B',
-        3: 'C',
-        4: 'D',
-        5: 'E',
-        6: 'F',
-        7: 'G',
-        8: 'H',
-        9: 'K',
-        10: 'L',
-        11: 'M',
-        12: 'N',
-        13: 'O'
-    }
-    return state_map[state_as_int]
+import GraphDefinitions
 
 class BeraterEnv(gym.Env):
     """
@@ -55,6 +19,7 @@ class BeraterEnv(gym.Env):
     showStep = False
     showDone = True
     envEpisodeModulo = 100
+    number_of_consultants = 2
 
     def __init__(self, graph):
         self.map = graph
@@ -105,7 +70,7 @@ class BeraterEnv(gym.Env):
         self.customer_visited(destination)
         done = destination == 'S' and self.all_customers_visited()
 
-        stateAsInt = state_name_to_int(self.state)
+        stateAsInt = GraphDefinitions.state_name_to_int(self.state)
         self.totalReward += reward
         self.stepCount += 1
         self.envReward += reward
@@ -151,7 +116,7 @@ class BeraterEnv(gym.Env):
         return result
 
     def getPathObservation(self, position, path):
-        source = int_to_state_name(position)
+        source = GraphDefinitions.int_to_state_name(position)
         paths = self.map[source]
         if path < len(paths):
           target, cost = paths[path]
@@ -176,20 +141,24 @@ class BeraterEnv(gym.Env):
 
       
     def modulate_reward(self):
-      number_of_customers = len(self.map) - 1
-      number_per_consultant = int(number_of_customers/2)
-#       number_per_consultant = int(number_of_customers/1.5)
-      self.customer_reward = {
-          'S': 0
-      }
-      for customer_nr in range(1, number_of_customers + 1):
-        self.customer_reward[int_to_state_name(customer_nr)] = 0
-      
-      # every consultant only visits a few random customers
-      samples = random.sample(range(1, number_of_customers + 1), k=number_per_consultant)
-      key_list = list(self.customer_reward.keys())
-      for sample in samples:
-        self.customer_reward[key_list[sample]] = 1000
+        number_of_customers = len(self.map) - 1
+        number_per_consultant = int(number_of_customers/BeraterEnv.number_of_consultants)
+    #       number_per_consultant = int(number_of_customers/1.5)
+        self.customer_reward = {
+            'S': 0
+        }
+        if (BeraterEnv.number_of_consultants > 1):
+            for customer_nr in range(1, number_of_customers + 1):
+                self.customer_reward[GraphDefinitions.int_to_state_name(customer_nr)] = 0
+            
+            # every consultant only visits a few random customers
+            samples = random.sample(range(1, number_of_customers + 1), k=number_per_consultant)
+            key_list = list(self.customer_reward.keys())
+            for sample in samples:
+                self.customer_reward[key_list[sample]] = 1000
+        else:
+            for customer_nr in range(1, number_of_customers + 1):
+                self.customer_reward[GraphDefinitions.int_to_state_name(customer_nr)] = 1000
 
       
     def reset(self):
@@ -199,7 +168,8 @@ class BeraterEnv(gym.Env):
 
         self.modulate_reward()
         self.state = 'S'
-        return self.getObservation(state_name_to_int(self.state))
+        return self.getObservation(GraphDefinitions.state_name_to_int(self.state))
       
     def render(self):
-      print(self.customer_reward)
+        print("customer_reward: " ,end='')
+        print(self.customer_reward)

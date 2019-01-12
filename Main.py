@@ -10,6 +10,7 @@ import GraphDefinitions
 
 #########################################
 
+log_dir = '/temp/_berater/'
 currentGraph = GraphDefinitions.getSmallGraph()
 
 env = BeraterEnv.BeraterEnv( currentGraph )
@@ -45,7 +46,7 @@ print(tf.__version__)
 
 # https://github.com/openai/baselines/blob/master/baselines/deepq/experiments/train_pong.py
 # log_dir = logger.get_dir()
-log_dir = '/temp/_berater_small/'
+
 
 import gym
 from baselines import bench
@@ -55,8 +56,8 @@ from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 from baselines.common.vec_env.vec_monitor import VecMonitor
 from baselines.ppo2 import ppo2
 
-BeraterEnv.showStep = False
-BeraterEnv.showDone = False
+BeraterEnv.BeraterEnv.showStep = False
+BeraterEnv.BeraterEnv.showDone = True
 
 env = BeraterEnv.BeraterEnv( currentGraph )
 
@@ -74,7 +75,7 @@ model = ppo2.learn(\
     num_layers=2,\
     ent_coef=0.01,\
     # total_timesteps=500000)
-    total_timesteps=50000)
+    total_timesteps=5000)
 
 # %time model = ppo2.learn(\
 #     env=monitored_env,\
@@ -122,3 +123,5 @@ r = results[0]
 plt.ylim(0, .75)
 # plt.plot(np.cumsum(r.monitor.l), r.monitor.r)
 plt.plot(np.cumsum(r.monitor.l), pu.smooth(r.monitor.r, radius=100))
+
+input("Press Enter to continue...")

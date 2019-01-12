@@ -123,14 +123,12 @@ class BeraterEnv(gym.Env):
             self.envEpisodeCount += 1
             if BeraterEnv.showDone:
                 episodes = BeraterEnv.envEpisodeModulo
-                if (self.envEpisodeCount % BeraterEnv.envEpisodeModulo != 0):
-                    episodes = self.envEpisodeCount % BeraterEnv.envEpisodeModulo
-                print( "Done: " + 
+                if (self.envEpisodeCount % BeraterEnv.envEpisodeModulo) == 0:
+                    print( "Done: " + 
                         ("episodes=%6.0f  " % self.envEpisodeCount) + 
                         ("avgSteps=%6.2f  " % (self.envStepCount/episodes)) + 
                         ("avgTotalReward=% 3.2f" % (self.envReward/episodes) )
                         )
-                if (self.envEpisodeCount%BeraterEnv.envEpisodeModulo) == 0:
                     self.envReward = 0
                     self.envStepCount = 0
 

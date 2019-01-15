@@ -10,12 +10,15 @@ import GraphDefinitions
 
 #########################################
 
+print("=========================")
+print("--- Setup environment ---")
+
 log_dir = '/temp/_berater/'
 currentGraph = GraphDefinitions.getSmallGraph()
 
 env = BeraterEnv.BeraterEnv( currentGraph )
-print(env.reset())
-print(env.customer_reward)
+env.reset()
+env.render()
 
 #########################################
 
@@ -79,7 +82,7 @@ model = ppo2.learn(\
     num_hidden=50,\
     num_layers=2,\
     ent_coef=0.01,\
-    total_timesteps=500)
+    total_timesteps=5000)
 
 model.save('berater-ppo-v8.pkl')
 monitored_env.close()
@@ -104,21 +107,18 @@ import numpy as np
 
 print("--- Enjoy ---")
 
-observation = env.reset()
-env.render()
-state = np.zeros((1, 2*128))
-dones = np.zeros((1))
 
 BeraterEnv.BeraterEnv.showStep = True
-BeraterEnv.BeraterEnv.showDone = True
-BeraterEnv.BeraterEnv.number_of_consultants = 1
 
-for t in range(1000):
-    actions, _, state, _ = model.step(observation, S=state, M=dones)
-    observation, reward, done, info = env.step(actions[0])
-    if done:
-        print("Episode finished after {} timesteps".format(t+1))
-        break
-env.close()
+
+for c in range(1000):
+    observation = env.reset()
+    for c in range(1000):
+        actions, _, state, _ = model.step(observation)
+        observation, reward, done, info = env.step(actions[0])
+        if done:
+            print("Episode finished after {} timesteps".format(t+1))
+            break
+
 
 input("Press Enter to continue...")

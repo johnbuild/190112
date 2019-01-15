@@ -88,8 +88,23 @@ def getDistance( from_name, to_name, map ):
                 break
     return result
 
-print( createDistanceMatrix(getSmallGraph()))
+def createDistanceTriangle( graph ):
+    size = len(graph)
+    result = []
 
+    for from_node in range(size):
+        from_name = int_to_state_name(from_node)
+        for to_node in range(from_node+1,size):
+            to_name = int_to_state_name(to_node)
+            distance = getDistance(from_name,to_name,graph)
+            if distance == 0:
+                distance = getDistance(to_name,from_name,graph)
+            result.append(distance)
+    return result
+
+graph=getSmallGraph()
+m = createDistanceMatrix(graph)
+t = createDistanceTriangle(graph)
 
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
@@ -143,7 +158,11 @@ def add_capacity_constraints(routing, data, demand_callback):
 def getTotalReward(graph,customer_reward):
     result = 0
     # Instantiate the data problem.
-    data = create_data_model(graph,customer_reward)
+    rewards = [0]*len(customer_reward)
+    for loc in customer_reward:
+        rewards[state_name_to_int(loc)] = customer_reward[loc]
+    
+    data = create_data_model(graph,rewards)
     # Create Routing Model
     routing = pywrapcp.RoutingModel(
         data["num_locations"],
@@ -175,7 +194,8 @@ def getAssignmentReward(data, routing, assignment):
     total_dist = 0
     for vehicle_id in range(data["num_vehicles"]):
         index = routing.Start(vehicle_id)
-        plan_output = 'Route for vehicle {0}:\n'.format(vehicle_id)
+        plan_output = ''
+        # plan_output = 'Route for vehicle {0}:\n'.format(vehicle_id)
         route_dist = 0
         route_load = 0
         while not routing.IsEnd(index):
@@ -193,10 +213,16 @@ def getAssignmentReward(data, routing, assignment):
         plan_output += ' {0} Load({1})\n'.format(node_index, route_load)
         plan_output += 'Distance of the route: {0}m\n'.format(route_dist)
         plan_output += 'Load of the route: {0}\n'.format(route_load)
-        print(plan_output)
+        print(plan_output,end='')
     print('Total reward: {0}'.format(result))
     return result
 
+
 graph = getSmallGraph()
-rewards = [1000]*len(graph)
+rewards={'S':0, 'A':0,'B':0,'C':1000}
+# rewards = {}
+# for loc in graph:
+#     rewards[loc] = 1000
+# rewards['S']=0
+print( createDistanceMatrix(graph))
 print(getTotalReward(graph,rewards))

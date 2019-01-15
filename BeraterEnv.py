@@ -65,6 +65,10 @@ class BeraterEnv(gym.Env):
         lastState = self.state
         customerReward = self.customer_reward[destination]
         reward = (customerReward - cost) / self.optimum
+        
+        pureReward = 0
+        if (cost != 1000 and cost != 1) pureReward = reward
+        self.totalPureReward += pureReward
 
         self.state = destination
         self.customer_visited(destination)
@@ -72,6 +76,7 @@ class BeraterEnv(gym.Env):
 
         stateAsInt = GraphDefinitions.state_name_to_int(self.state)
         self.totalReward += reward
+
         self.stepCount += 1
         self.envReward += reward
         self.envStepCount += 1
@@ -131,13 +136,14 @@ class BeraterEnv(gym.Env):
         self.customer_reward[customer] = 0
 
     def all_customers_visited(self):
-        return self.calculate_customers_reward() == 0
-
-    def calculate_customers_reward(self):
         sum = 0
         for value in self.customer_reward.values():
             sum += value
-        return sum
+        return sum == 0
+
+    def calculate_customers_reward(self):
+        result = GraphDefinitions.getTotalReward(self.map,self.customer_reward)
+        return result
 
       
     def modulate_reward(self):
@@ -162,6 +168,7 @@ class BeraterEnv(gym.Env):
 
       
     def reset(self):
+        self.totalPureReward = 0
         self.totalReward = 0
         self.stepCount = 0
         self.isDone = False
@@ -171,5 +178,12 @@ class BeraterEnv(gym.Env):
         return self.getObservation(GraphDefinitions.state_name_to_int(self.state))
       
     def render(self):
-        print("customer_reward: " ,end='')
+        print("graph definition  : ", end='')
+        print(self.map)
+        print("customer_reward   : " ,end='')
         print(self.customer_reward)
+        print("optimum           : ", end='')
+        print(self.optimum)
+        print("observation       : ", end='')
+        stateAsInt = GraphDefinitions.state_name_to_int(self.state)
+        print(self.getObservation(stateAsInt))
